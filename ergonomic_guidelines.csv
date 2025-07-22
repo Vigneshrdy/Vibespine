@@ -1,0 +1,6 @@
+Body_Part,Ideal_Angle_Range,Poor_Posture_Threshold,Health_Impact
+Neck (Head-Shoulder),0-15°,>30°,"Neck strain, headaches"
+Torso (Hip-Shoulder),90-110°,<70° or >130°,"Back pain, spinal issues"
+Elbow,90-110°,<70° or >130°,Repetitive strain injury
+Knee,90-110°,<70° or >130°,Circulation problems
+Eye-Screen Distance,50-70cm,<40cm or >80cm,"Eye strain, vision issues"

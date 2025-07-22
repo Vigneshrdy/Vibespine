@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posture Guardian - Real-time Posture Detection & Correction</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <h1>🛡️ Posture Guardian</h1>
+                        <p class="tagline">Real-time posture monitoring & correction</p>
+                    </div>
+                    <div class="header-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Session Time</span>
+                            <span class="stat-value" id="sessionTime">00:00:00</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Posture Score</span>
+                            <span class="stat-value" id="postureScore">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Streak</span>
+                            <span class="stat-value" id="streakCount">0 days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="app-layout">
+                    <!-- Video Section -->
+                    <section class="video-section">
+                        <div class="video-container">
+                            <video id="inputVideo" class="video-feed" playsinline></video>
+                            <canvas id="outputCanvas" class="overlay-canvas"></canvas>
+                            
+                            <!-- Status Overlay -->
+                            <div class="status-overlay">
+                                <div class="posture-status" id="postureStatus">
+                                    <div class="status-indicator" id="statusIndicator"></div>
+                                    <span class="status-text" id="statusText">Initializing...</span>
+                                </div>
+                                <div class="angle-display">
+                                    <div class="angle-item">
+                                        <span class="angle-label">Neck</span>
+                                        <span class="angle-value" id="neckAngle">--°</span>
+                                    </div>
+                                    <div class="angle-item">
+                                        <span class="angle-label">Torso</span>
+                                        <span class="angle-value" id="torsoAngle">--°</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Camera Controls -->
+                            <div class="camera-controls">
+                                <button class="btn btn--primary" id="startBtn">Start Monitoring</button>
+                                <button class="btn btn--secondary" id="stopBtn" style="display: none;">Stop</button>
+                                <button class="btn btn--outline" id="calibrateBtn" style="display: none;">Calibrate</button>
+                            </div>
+                        </div>
+
+                        <!-- Alert Banner -->
+                        <div class="alert-banner" id="alertBanner" style="display: none;">
+                            <div class="alert-content">
+                                <span class="alert-icon">⚠️</span>
+                                <span class="alert-message" id="alertMessage">Poor posture detected!</span>
+                                <button class="alert-close" id="alertClose">×</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Control Panel -->
+                    <aside class="control-panel">
+                        <!-- Navigation Tabs -->
+                        <div class="panel-tabs">
+                            <button class="tab-btn active" data-panel="monitoring">Monitor</button>
+                            <button class="tab-btn" data-panel="statistics">Stats</button>
+                            <button class="tab-btn" data-panel="settings">Settings</button>
+                            <button class="tab-btn" data-panel="achievements">Awards</button>
+                        </div>
+
+                        <!-- Monitoring Panel -->
+                        <div class="panel monitoring-panel active" id="monitoringPanel">
+                            <div class="card">
+                                <div class="card__body">
+                                    <h3>Current Session</h3>
+                                    <div class="session-stats">
+                                        <div class="progress-item">
+                                            <label>Good Posture Time</label>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" id="goodPostureProgress"></div>
+                                            </div>
+                                            <span class="progress-text" id="goodPostureTime">0m 0s</span>
+                                        </div>
+                                        <div class="progress-item">
+                                            <label>Poor Posture Warnings</label>
+                                            <span class="warning-count" id="warningCount">0</span>
+                                        </div>
+                                    </div>
+
+                                    <h4>Quick Actions</h4>
+                                    <div class="quick-actions">
+                                        <button class="btn btn--outline btn--sm" id="exerciseBtn">Start Exercise</button>
+                                        <button class="btn btn--outline btn--sm" id="calibratePosture">Calibrate Posture</button>
+                                        <button class="btn btn--outline btn--sm" id="resetSession">Reset Session</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Exercise Reminder -->
+                            <div class="card" id="exerciseReminder" style="display: none;">
+                                <div class="card__body">
+                                    <h4>🧘 Time for a stretch!</h4>
+                                    <p>You've been sitting for a while. Take a quick break with this exercise:</p>
+                                    <div class="exercise-info">
+                                        <strong id="exerciseName">Neck Stretch</strong>
+                                        <p id="exerciseDescription">Gently tilt your head to each side</p>
+                                        <div class="exercise-timer">
+                                            <span id="exerciseTimer">30s</span>
+                                        </div>
+                                    </div>
+                                    <div class="exercise-controls">
+                                        <button class="btn btn--primary btn--sm" id="startExercise">Start</button>
+                                        <button class="btn btn--outline btn--sm" id="skipExercise">Skip</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Panel -->
+                        <div class="panel statistics-panel" id="statisticsPanel">
+                            <div class="card">
+                                <div class="card__body">
+                                    <h3>Statistics</h3>
+                                    <div class="stats-grid">
+                                        <div class="stat-card">
+                                            <div class="stat-icon">📊</div>
+                                            <div class="stat-info">
+                                                <span class="stat-number" id="totalSessions">0</span>
+                                                <span class="stat-label">Total Sessions</span>
+                                            </div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-icon">⏱️</div>
+                                            <div class="stat-info">
+                                                <span class="stat-number" id="totalTime">0h</span>
+                                                <span class="stat-label">Total Time</span>
+                                            </div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-icon">📈</div>
+                                            <div class="stat-info">
+                                                <span class="stat-number" id="avgScore">0%</span>
+                                                <span class="stat-label">Avg Score</span>
+                                            </div>
+                                        </div>
+                                        <div class="stat-card">
+                                            <div class="stat-icon">🎯</div>
+                                            <div class="stat-info">
+                                                <span class="stat-number" id="bestStreak">0</span>
+                                                <span class="stat-label">Best Streak</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h4>Weekly Progress</h4>
+                                    <div class="chart-container">
+                                        <canvas id="weeklyChart" width="300" height="150"></canvas>
+                                    </div>
+
+                                    <h4>Improvement Trends</h4>
+                                    <div class="chart-container">
+                                        <canvas id="trendChart" width="300" height="120"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings Panel -->
+                        <div class="panel settings-panel" id="settingsPanel">
+                            <div class="card">
+                                <div class="card__body">
+                                    <h3>Settings</h3>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" id="audioNotifications" checked>
+                                            Audio Notifications
+                                        </label>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" id="stretchReminders" checked>
+                                            Stretch Reminders
+                                        </label>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="reminderInterval">Reminder Interval</label>
+                                        <select class="form-control" id="reminderInterval">
+                                            <option value="20">20 minutes</option>
+                                            <option value="30" selected>30 minutes</option>
+                                            <option value="45">45 minutes</option>
+                                            <option value="60">60 minutes</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="sensitivity">Detection Sensitivity</label>
+                                        <select class="form-control" id="sensitivity">
+                                            <option value="low">Low</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </div>
+
+                                    <h4>Posture Thresholds</h4>
+                                    <div class="form-group">
+                                        <label class="form-label" for="neckThreshold">Neck Angle Threshold (°)</label>
+                                        <input type="range" class="form-control" id="neckThreshold" min="10" max="40" value="15">
+                                        <span class="range-value" id="neckThresholdValue">15°</span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" for="torsoThreshold">Torso Angle Threshold (°)</label>
+                                        <input type="range" class="form-control" id="torsoThreshold" min="60" max="120" value="85">
+                                        <span class="range-value" id="torsoThresholdValue">85°</span>
+                                    </div>
+
+                                    <div class="settings-actions">
+                                        <button class="btn btn--primary btn--sm" id="saveSettings">Save Settings</button>
+                                        <button class="btn btn--outline btn--sm" id="resetSettings">Reset to Default</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Achievements Panel -->
+                        <div class="panel achievements-panel" id="achievementsPanel">
+                            <div class="card">
+                                <div class="card__body">
+                                    <h3>🏆 Achievements</h3>
+                                    <div class="achievements-grid" id="achievementsList">
+                                        <!-- Achievements will be populated by JavaScript -->
+                                    </div>
+
+                                    <h4>Recent Activity</h4>
+                                    <div class="activity-log" id="activityLog">
+                                        <div class="activity-item">
+                                            <span class="activity-icon">📅</span>
+                                            <span class="activity-text">Welcome to Posture Guardian!</span>
+                                            <span class="activity-time">Just now</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+
+        <!-- Exercise Modal -->
+        <div class="modal-overlay" id="exerciseModal" style="display: none;">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="modalExerciseName">Neck Stretch</h3>
+                    <button class="modal-close" id="modalClose">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="exercise-visual">
+                        <div class="exercise-icon">🧘‍♀️</div>
+                        <div class="exercise-timer-large" id="modalTimer">30</div>
+                    </div>
+                    <div class="exercise-instructions" id="modalInstructions">
+                        <!-- Instructions will be populated -->
+                    </div>
+                    <div class="exercise-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="exerciseProgress"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn--primary" id="modalStartStop">Start Exercise</button>
+                    <button class="btn btn--outline" id="modalSkip">Skip</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification System -->
+        <div class="notification-container" id="notificationContainer">
+            <!-- Notifications will be added here dynamically -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

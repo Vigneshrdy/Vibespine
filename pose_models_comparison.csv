@@ -1,0 +1,6 @@
+Model,Keypoints,Performance_FPS,Accuracy,File_Size_MB,Browser_Support,Real_Time,Ease_of_Use
+MediaPipe,33,30,95,2.6,5,5,5
+OpenPose,135,15,90,200.0,2,3,2
+MoveNet Lightning,17,50,92,6.5,5,5,4
+MoveNet Thunder,17,25,96,9.3,5,4,4
+PoseNet,17,20,85,12.5,4,4,5

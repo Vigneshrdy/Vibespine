@@ -1,0 +1,9 @@
+Component,Complexity_1_5,Development_Hours,Technologies
+Webcam Access,2,4,"React-Webcam, MediaDevices API"
+Pose Detection,4,16,MediaPipe/TensorFlow.js
+Angle Calculation,3,8,Mathematical calculations
+Posture Classification,4,12,Rule-based/ML algorithms
+Real-time Notifications,3,6,"Web Audio API, Notifications"
+Progress Tracking,3,8,"Local Storage, Charts"
+Reports Generation,2,4,"Chart.js, PDF generation"
+Settings Management,2,4,"React State, Local Storage"
